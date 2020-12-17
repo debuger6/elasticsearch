@@ -111,6 +111,7 @@ public final class IndexScopedSettings extends AbstractScopedSettings {
         IndexSortConfig.INDEX_SORT_MODE_SETTING,
         IndexSettings.INDEX_TRANSLOG_DURABILITY_SETTING,
         IndexSettings.INDEX_WARMER_ENABLED_SETTING,
+        IndexSettings.INDEX_GET_CACHE_ENABLED_SETTING,
         IndexSettings.INDEX_REFRESH_INTERVAL_SETTING,
         IndexSettings.MAX_RESULT_WINDOW_SETTING,
         IndexSettings.MAX_INNER_RESULT_WINDOW_SETTING,

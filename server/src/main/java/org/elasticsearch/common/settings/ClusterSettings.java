@@ -405,6 +405,7 @@ public final class ClusterSettings extends AbstractScopedSettings {
             IndicesService.INDICES_CACHE_CLEAN_INTERVAL_SETTING,
             IndicesFieldDataCache.INDICES_FIELDDATA_CACHE_SIZE_KEY,
             IndicesRequestCache.INDICES_CACHE_QUERY_SIZE,
+            IndicesRequestCache.INDICES_CACHE_GET_SIZE,
             IndicesRequestCache.INDICES_CACHE_QUERY_EXPIRE,
             HunspellService.HUNSPELL_LAZY_LOAD,
             HunspellService.HUNSPELL_IGNORE_CASE,

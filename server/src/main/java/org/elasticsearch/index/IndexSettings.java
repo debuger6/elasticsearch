@@ -72,6 +72,11 @@ public final class IndexSettings {
             (value) -> Translog.Durability.valueOf(value.toUpperCase(Locale.ROOT)), Property.Dynamic, Property.IndexScope);
     public static final Setting<Boolean> INDEX_WARMER_ENABLED_SETTING =
         Setting.boolSetting("index.warmer.enabled", true, Property.Dynamic, Property.IndexScope);
+
+    // whether to use the get cache
+    public static final Setting<Boolean> INDEX_GET_CACHE_ENABLED_SETTING =
+        Setting.boolSetting("index.get.cache.enabled", false, Property.Dynamic, Property.IndexScope);
+
     public static final Setting<String> INDEX_CHECK_ON_STARTUP =
         new Setting<>("index.shard.check_on_startup", "false", (s) -> {
             switch (s) {
@@ -387,6 +392,7 @@ public final class IndexSettings {
     }
 
     private volatile boolean warmerEnabled;
+    private volatile boolean getCacheEnabled;
     private volatile int maxResultWindow;
     private volatile int maxInnerResultWindow;
     private volatile int maxAdjacencyMatrixFilters;
@@ -503,6 +509,7 @@ public final class IndexSettings {
         softDeleteRetentionOperations = scopedSettings.get(INDEX_SOFT_DELETES_RETENTION_OPERATIONS_SETTING);
         retentionLeaseMillis = scopedSettings.get(INDEX_SOFT_DELETES_RETENTION_LEASE_PERIOD_SETTING).millis();
         warmerEnabled = scopedSettings.get(INDEX_WARMER_ENABLED_SETTING);
+        getCacheEnabled = scopedSettings.get(INDEX_GET_CACHE_ENABLED_SETTING);
         maxResultWindow = scopedSettings.get(MAX_RESULT_WINDOW_SETTING);
         maxInnerResultWindow = scopedSettings.get(MAX_INNER_RESULT_WINDOW_SETTING);
         maxAdjacencyMatrixFilters = scopedSettings.get(MAX_ADJACENCY_MATRIX_FILTERS_SETTING);
@@ -555,6 +562,7 @@ public final class IndexSettings {
         scopedSettings.addSettingsUpdateConsumer(MAX_NGRAM_DIFF_SETTING, this::setMaxNgramDiff);
         scopedSettings.addSettingsUpdateConsumer(MAX_SHINGLE_DIFF_SETTING, this::setMaxShingleDiff);
         scopedSettings.addSettingsUpdateConsumer(INDEX_WARMER_ENABLED_SETTING, this::setEnableWarmer);
+        scopedSettings.addSettingsUpdateConsumer(INDEX_GET_CACHE_ENABLED_SETTING, this::setEnableGetCache);
         scopedSettings.addSettingsUpdateConsumer(INDEX_GC_DELETES_SETTING, this::setGCDeletes);
         scopedSettings.addSettingsUpdateConsumer(INDEX_TRANSLOG_FLUSH_THRESHOLD_SIZE_SETTING, this::setTranslogFlushThresholdSize);
         scopedSettings.addSettingsUpdateConsumer(INDEX_FLUSH_AFTER_MERGE_THRESHOLD_SIZE_SETTING, this::setFlushAfterMergeThresholdSize);
@@ -751,6 +759,17 @@ public final class IndexSettings {
 
     private void setEnableWarmer(boolean enableWarmer) {
         this.warmerEnabled = enableWarmer;
+    }
+
+    /**
+     * Returns true if get cache is enabled, otherwise <code>false</code>
+     */
+    public boolean isGetCacheEnabled() {
+        return getCacheEnabled;
+    }
+
+    private void setEnableGetCache(boolean enableGetCache) {
+        this.getCacheEnabled = enableGetCache;
     }
 
     /**

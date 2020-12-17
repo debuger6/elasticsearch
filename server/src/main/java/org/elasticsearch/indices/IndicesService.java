@@ -49,6 +49,8 @@ import org.elasticsearch.common.CheckedFunction;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.breaker.CircuitBreaker;
 import org.elasticsearch.common.bytes.BytesReference;
+import org.elasticsearch.common.cache.Cache;
+import org.elasticsearch.common.cache.CacheBuilder;
 import org.elasticsearch.common.component.AbstractLifecycleComponent;
 import org.elasticsearch.common.io.FileSystemUtils;
 import org.elasticsearch.common.io.stream.BytesStreamOutput;
@@ -160,9 +162,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.*;
 import static org.elasticsearch.common.collect.MapBuilder.newMapBuilder;
 import static org.elasticsearch.common.util.CollectionUtils.arrayAsArrayList;
 import static org.elasticsearch.common.util.concurrent.EsExecutors.daemonThreadFactory;
@@ -222,6 +222,21 @@ public class IndicesService extends AbstractLifecycleComponent
     private final CountDownLatch closeLatch = new CountDownLatch(1);
     private volatile boolean idFieldDataEnabled;
 
+    // public static Map<String, BytesReference> GetCache = new ConcurrentHashMap<>();
+    /*public static LoadingCache<String, BytesReference> GetCache = CacheBuilder.newBuilder()
+        .maximumWeight(1000).weigher(new Weigher<String, BytesReference>() {
+            @Override
+            public int weigh(String key, BytesReference value) {
+                return key.length() + (int) value.ramBytesUsed();
+            }
+        }).build(new CacheLoader<String, BytesReference>() {
+            @Override
+            public BytesReference load(String key) throws Exception {
+                return null;
+            }
+        });*/
+    public static Cache<String, BytesReference> GetCache = null;
+
     @Nullable
     private final EsThreadPoolExecutor danglingIndicesThreadPoolExecutor;
     private final Set<Index> danglingIndicesToWrite = Sets.newConcurrentHashSet();
@@ -276,6 +291,10 @@ public class IndicesService extends AbstractLifecycleComponent
         this.cacheCleaner = new CacheCleaner(indicesFieldDataCache, indicesRequestCache,  logger, threadPool, this.cleanInterval);
         this.metaStateService = metaStateService;
         this.engineFactoryProviders = engineFactoryProviders;
+
+        ByteSizeValue getCacheSize = IndicesRequestCache.INDICES_CACHE_GET_SIZE.get(settings);
+        GetCache =  CacheBuilder.<String, BytesReference>builder()
+            .setMaximumWeight(getCacheSize.getBytes()).weigher((k, v) -> k.length() + v.ramBytesUsed()).build();
 
         // do not allow any plugin-provided index store type to conflict with a built-in type
         for (final String indexStoreType : directoryFactories.keySet()) {

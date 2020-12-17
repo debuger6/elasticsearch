@@ -57,6 +57,7 @@ import org.elasticsearch.index.mapper.SourceToParse;
 import org.elasticsearch.index.mapper.Uid;
 import org.elasticsearch.index.shard.AbstractIndexShardComponent;
 import org.elasticsearch.index.shard.IndexShard;
+import org.elasticsearch.indices.IndicesService;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
 import java.io.IOException;
@@ -190,6 +191,14 @@ public final class ShardGetService extends AbstractIndexShardComponent {
         }
 
         try {
+            if (indexShard.indexSettings().isGetCacheEnabled()) {
+                BytesReference source = IndicesService.GetCache.get(shardId.getIndexName() + "#" + id);
+                if (source != null) {
+                    return new GetResult(shardId.getIndexName(), type, id, get.docIdAndVersion().seqNo, get.docIdAndVersion().primaryTerm,
+                        get.version(), get.exists(), source, null, null);
+                }
+            }
+
             // break between having loaded it from translog (so we only have _source), and having a document to load
             return innerGetLoadFromStoredFields(type, id, gFields, fetchSourceContext, get, mapperService);
         } finally {
